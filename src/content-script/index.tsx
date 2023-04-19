@@ -36,7 +36,11 @@ async function mount(question: string, siteConfig: SearchEngine) {
   }
 
   render(
-    <ChatGPTContainer question={question} triggerMode={userConfig.triggerMode || 'always'} />,
+    <ChatGPTContainer
+      question={question}
+      triggerMode={userConfig.triggerMode || 'always'}
+      provider={userConfig.provider}
+    />,
     container,
   )
 }

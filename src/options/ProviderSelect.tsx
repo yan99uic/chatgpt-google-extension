@@ -1,4 +1,4 @@
-import { Button, Input, Select, Spinner, Tabs, useInput, useToasts } from '@geist-ui/core'
+import { Button, Input, Spinner, Tabs, useInput, useToasts } from '@geist-ui/core'
 import { FC, useCallback, useState } from 'react'
 import useSWR from 'swr'
 import { fetchExtensionConfigs } from '../api'
@@ -14,31 +14,35 @@ async function loadModels(): Promise<string[]> {
   return configs.openai_model_names
 }
 
-const ConfigPanel: FC<ConfigProps> = ({ config, models }) => {
+const ConfigPanel: FC<ConfigProps> = ({ config }) => {
   const [tab, setTab] = useState<ProviderType>(config.provider)
+  const { bindings: endpointBindings } = useInput(
+    config.configs[ProviderType.GPT3]?.endpoint ?? 'https://api.openai.com',
+  )
   const { bindings: apiKeyBindings } = useInput(config.configs[ProviderType.GPT3]?.apiKey ?? '')
-  const [model, setModel] = useState(config.configs[ProviderType.GPT3]?.model ?? models[0])
+  const { bindings: modelBindings } = useInput(config.configs[ProviderType.GPT3]?.model ?? '')
   const { setToast } = useToasts()
 
   const save = useCallback(async () => {
     if (tab === ProviderType.GPT3) {
-      if (!apiKeyBindings.value) {
-        alert('Please enter your OpenAI API key')
+      if (!modelBindings.value) {
+        alert('Please enter your OpenAI API model name')
         return
       }
-      if (!model || !models.includes(model)) {
-        alert('Please select a valid model')
+      if (!apiKeyBindings.value) {
+        alert('Please enter your OpenAI API key')
         return
       }
     }
     await saveProviderConfigs(tab, {
       [ProviderType.GPT3]: {
-        model,
+        endpoint: endpointBindings.value,
+        model: modelBindings.value,
         apiKey: apiKeyBindings.value,
       },
     })
     setToast({ text: 'Changes saved', type: 'success' })
-  }, [apiKeyBindings.value, model, models, setToast, tab])
+  }, [apiKeyBindings.value, modelBindings.value, setToast, tab])
 
   return (
     <div className="flex flex-col gap-3">
@@ -53,19 +57,13 @@ const ConfigPanel: FC<ConfigProps> = ({ config, models }) => {
               <span className="font-semibold">charge by usage</span>
             </span>
             <div className="flex flex-row gap-2">
-              <Select
-                scale={2 / 3}
-                value={model}
-                onChange={(v) => setModel(v as string)}
-                placeholder="model"
-              >
-                {models.map((m) => (
-                  <Select.Option key={m} value={m}>
-                    {m}
-                  </Select.Option>
-                ))}
-              </Select>
+              <Input label="API endpoint" scale={2 / 3} width="100%" {...endpointBindings} />
+            </div>
+            <div className="flex flex-row gap-2">
               <Input htmlType="password" label="API key" scale={2 / 3} {...apiKeyBindings} />
+            </div>
+            <div className="flex flex-row gap-2">
+              <Input label="API model" scale={2 / 3} {...modelBindings} />
             </div>
             <span className="italic text-xs">
               You can find or create your API key{' '}
@@ -89,13 +87,13 @@ const ConfigPanel: FC<ConfigProps> = ({ config, models }) => {
 
 function ProviderSelect() {
   const query = useSWR('provider-configs', async () => {
-    const [config, models] = await Promise.all([getProviderConfigs(), loadModels()])
-    return { config, models }
+    const [config] = await Promise.all([getProviderConfigs()])
+    return { config }
   })
   if (query.isLoading) {
     return <Spinner />
   }
-  return <ConfigPanel config={query.data!.config} models={query.data!.models} />
+  return <ConfigPanel config={query.data!.config} />
 }
 
 export default ProviderSelect

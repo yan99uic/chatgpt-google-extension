@@ -37,10 +37,16 @@ export enum Language {
   Portuguese = 'portuguese',
 }
 
+export enum ProviderType {
+  ChatGPT = 'chatgpt',
+  GPT3 = 'gpt3',
+}
+
 const userConfigWithDefaultValue = {
   triggerMode: TriggerMode.Always,
   theme: Theme.Auto,
   language: Language.Auto,
+  provider: ProviderType.ChatGPT,
 }
 
 export type UserConfig = typeof userConfigWithDefaultValue
@@ -55,12 +61,8 @@ export async function updateUserConfig(updates: Partial<UserConfig>) {
   return Browser.storage.local.set(updates)
 }
 
-export enum ProviderType {
-  ChatGPT = 'chatgpt',
-  GPT3 = 'gpt3',
-}
-
 interface GPT3ProviderConfig {
+  endpoint: string
   model: string
   apiKey: string
 }

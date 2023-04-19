@@ -1,12 +1,13 @@
 import { LightBulbIcon, SearchIcon } from '@primer/octicons-react'
 import { useState } from 'preact/hooks'
-import { TriggerMode } from '../config'
+import { ProviderType, TriggerMode } from '../config'
 import ChatGPTQuery, { QueryStatus } from './ChatGPTQuery'
 import { endsWithQuestionMark } from './utils.js'
 
 interface Props {
   question: string
   triggerMode: TriggerMode
+  provider: ProviderType
   onStatusChange?: (status: QueryStatus) => void
 }
 
@@ -31,7 +32,9 @@ function ChatGPTCard(props: Props) {
   }
   return (
     <p className="icon-and-text cursor-pointer" onClick={() => setTriggered(true)}>
-      <SearchIcon size="small" /> Ask ChatGPT for this query
+      <SearchIcon size="small" /> Ask{' '}
+      {props.provider == ProviderType.ChatGPT ? '[Public ChatGTP]' : '[OpenAI Service]'} for this
+      query
     </p>
   )
 }

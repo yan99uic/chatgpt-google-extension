@@ -2,7 +2,8 @@ import { fetchSSE } from '../fetch-sse'
 import { GenerateAnswerParams, Provider } from '../types'
 
 export class OpenAIProvider implements Provider {
-  constructor(private token: string, private model: string) {
+  constructor(private endpoint: string, private token: string, private model: string) {
+    this.endpoint = endpoint
     this.token = token
     this.model = model
   }
@@ -16,15 +17,20 @@ export class OpenAIProvider implements Provider {
 
   async generateAnswer(params: GenerateAnswerParams) {
     let result = ''
-    await fetchSSE('https://api.openai.com/v1/completions', {
+    let endpoint = this.endpoint + '/v1/completions'
+    const headers: [string, string][] = [['Content-Type', 'application/json']]
+    if (this.endpoint.includes('.azure.com')) {
+      endpoint =
+        this.endpoint + '/openai/deployments/' + this.model + '/completions?api-version=2022-12-01'
+      headers.push(['api-key', this.token])
+    } else {
+      headers.push(['Authorization', `Bearer ${this.token}`])
+    }
+    await fetchSSE(endpoint, {
       method: 'POST',
       signal: params.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.token}`,
-      },
+      headers: headers,
       body: JSON.stringify({
-        model: this.model,
         prompt: this.buildPrompt(params.prompt),
         stream: true,
         max_tokens: 2048,

@@ -12,8 +12,8 @@ async function generateAnswers(port: Browser.Runtime.Port, question: string) {
     const token = await getChatGPTAccessToken()
     provider = new ChatGPTProvider(token)
   } else if (providerConfigs.provider === ProviderType.GPT3) {
-    const { apiKey, model } = providerConfigs.configs[ProviderType.GPT3]!
-    provider = new OpenAIProvider(apiKey, model)
+    const { endpoint, model, apiKey } = providerConfigs.configs[ProviderType.GPT3]!
+    provider = new OpenAIProvider(endpoint, apiKey, model)
   } else {
     throw new Error(`Unknown provider ${providerConfigs.provider}`)
   }
